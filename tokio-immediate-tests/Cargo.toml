@@ -1,0 +1,29 @@
+[package]
+name = "tokio-immediate-tests"
+description = "Tests for tokio-immediate"
+
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[features]
+default = []
+
+# Test `trigger` and wrappers for various `tokio::sync` primitives.
+sync = ["tokio-immediate/sync"]
+
+[dev-dependencies]
+tokio-immediate = { workspace = true }
+
+[dev-dependencies.tokio]
+workspace = true
+features = [
+    "rt",
+    "macros",
+    "time",
+]

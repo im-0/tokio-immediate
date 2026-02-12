@@ -1,0 +1,114 @@
+ARG rocky_version=8
+
+FROM quay.io/rockylinux/rockylinux:${rocky_version}
+
+# Must be in sync with `$SRC_ROOT/rust-toolchain.toml`.
+ARG rust_toolchain_version="1.93.1"
+ARG rust_toolchain_profile="default"
+ARG rust_toolchain_components="rust-analyzer,rust-src"
+
+COPY "zzzz-cd-workspaces.sh" "/etc/profile.d/zzzz-cd-workspaces.sh"
+COPY "zzzz-fancy-prompt.sh" "/etc/profile.d/zzzz-fancy-prompt.sh"
+COPY "gitconfig" "/root/.gitconfig"
+RUN mkdir --parents "/root/.config/htop"
+COPY "htoprc" "/root/.config/htop/htoprc"
+RUN mkdir "/workspaces"
+
+# Make sure that man pages are installed. Needed only on newer Fedora releases.
+RUN sed -i "s,^ *tsflags *= *nodocs *$,," /etc/dnf/dnf.conf
+
+RUN dnf --refresh upgrade --assumeyes
+
+# Enable EPEL and CRB (CodeReady Linux Builder) repositories.
+RUN dnf \
+        install \
+        --assumeyes \
+        "epel-release"
+RUN crb enable
+
+# Quality of life packages.
+RUN dnf \
+        install \
+        --assumeyes \
+        "glibc-langpack-en" \
+        "bash-completion" \
+        "coreutils-common" \
+        "man-db" \
+        "man-pages" \
+        "bat" \
+        "fzf" \
+        "mlocate" \
+        "procps-ng" \
+        "psmisc" \
+        "htop" \
+        "btop" \
+        "iputils" \
+        "iproute" \
+        "moreutils" \
+        "pv" \
+        "mc" \
+        "wget" \
+        "nmap-ncat" \
+        "rsync" \
+        "findutils" \
+        "file" \
+        "xz" \
+        "zstd" \
+        "unzip" \
+        "p7zip" \
+        "p7zip-plugins" \
+        "sqlite" \
+        "vim-enhanced" \
+        "nano" \
+        "bc" \
+        "git" \
+        "diffutils" \
+        "patch"
+
+# Rust-related development tools.
+RUN dnf \
+        install \
+        --assumeyes \
+        "clang" \
+        "mold"
+
+# Tools for generating docker/podman images.
+RUN dnf \
+        install \
+        --assumeyes \
+        "buildah" \
+        "skopeo"
+
+# Install Rust toolchain.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
+        -y \
+        --default-toolchain "${rust_toolchain_version}" \
+        --profile "${rust_toolchain_profile}" \
+        --component "${rust_toolchain_components}" \
+        --no-update-default-toolchain \
+        --no-modify-path
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN rustup completions "bash" >/etc/bash_completion.d/rustup
+RUN rustup completions "bash" "cargo" >/etc/bash_completion.d/cargo
+
+# Install `just`.
+RUN cargo \
+        install \
+        --bins \
+        --all-features \
+        "just"
+RUN just --completions "bash" >/etc/bash_completion.d/just
+
+# Remove caches.
+RUN dnf clean all
+RUN rm -rf "/root/.cargo/registry"
+RUN rm -rf "/root/.cache"
+RUN rm -f /var/log/dnf5.log*
+
+RUN mandb --create
+RUN updatedb
+
+ENV LANG="en_US.UTF-8"
+ENV DEVCONTAINER_HAS_MOLD=1
+CMD ["/bin/bash", "--login"]

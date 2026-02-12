@@ -1,0 +1,53 @@
+[package]
+name = "tokio-immediate-example-egui-minimal"
+description = "egui + tokio-immediate minimal usage example"
+
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[features]
+# Dummy feature to make `rust-analyzer` happy.
+# See https://github.com/rust-lang/rust-analyzer/issues/18114
+sync = []
+
+[dependencies]
+tokio-immediate-egui = { workspace = true }
+
+[dependencies.eframe]
+workspace = true
+features = [
+    "default_fonts",
+    "glow",
+    "wayland",
+    "x11",
+]
+
+[dependencies.egui]
+workspace = true
+features = [
+    "default_fonts",
+]
+
+[dependencies.tokio]
+workspace = true
+features = [
+    "net",
+    "rt-multi-thread",
+    "time",
+]
+
+
+[dependencies.winit]
+workspace = true
+features = [
+    "x11",
+    "wayland",
+    "wayland-dlopen",
+    "wayland-csd-adwaita",
+]

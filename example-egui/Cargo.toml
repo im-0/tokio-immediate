@@ -1,0 +1,66 @@
+[package]
+name = "tokio-immediate-example-egui"
+description = "egui + tokio-immediate usage example"
+
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[features]
+# Dummy feature to make `rust-analyzer` happy.
+# See https://github.com/rust-lang/rust-analyzer/issues/18114
+sync = []
+
+[dependencies]
+futures-util = { workspace = true }
+tokio-util = { workspace = true }
+
+[dependencies.eframe]
+workspace = true
+features = [
+    "default_fonts",
+    "glow",
+    "wayland",
+    "x11",
+]
+
+[dependencies.egui]
+workspace = true
+features = [
+    "default_fonts",
+]
+
+[dependencies.reqwest]
+workspace = true
+features = [
+    "rustls",
+    "stream",
+]
+
+[dependencies.tokio]
+workspace = true
+features = [
+    "macros",
+    "rt-multi-thread",
+    "time",
+]
+
+[dependencies.tokio-immediate-egui]
+workspace = true
+features = [
+    "sync",
+]
+
+[dependencies.winit]
+workspace = true
+features = [
+    "x11",
+    "wayland",
+    "wayland-dlopen",
+    "wayland-csd-adwaita",
+]

@@ -1,0 +1,72 @@
+[workspace]
+members = [
+    "example-egui",
+    "example-egui-minimal",
+    "tokio-immediate",
+    "tokio-immediate-egui",
+    "tokio-immediate-tests",
+]
+
+resolver = "3"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+
+authors = ["Ivan Mironov <mironov.ivan@gmail.com>"]
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/tara-zero/tokio-immediate"
+readme = "README.md"
+
+keywords = [
+    "async",
+    "non-blocking",
+    "futures",
+    "gui",
+    "imgui",
+    "immediate",
+]
+categories = [
+    "asynchronous",
+    "gui",
+]
+
+[workspace.dependencies.document-features]
+version = "0.2"
+default-features = false
+
+[workspace.dependencies.eframe]
+version = "0.33"
+default-features = false
+
+[workspace.dependencies.egui]
+version = "0.33"
+default-features = false
+
+[workspace.dependencies.futures-util]
+version = "0.3"
+default-features = false
+
+[workspace.dependencies.reqwest]
+version = "0.13"
+default-features = false
+
+[workspace.dependencies.tokio]
+version = "1"
+default-features = false
+
+[workspace.dependencies.tokio-immediate]
+path = "tokio-immediate"
+default-features = false
+
+[workspace.dependencies.tokio-immediate-egui]
+path = "tokio-immediate-egui"
+default-features = false
+
+[workspace.dependencies.tokio-util]
+version = "0.7"
+default-features = false
+
+[workspace.dependencies.winit]
+version = "0.30"
+default-features = false

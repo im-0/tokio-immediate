@@ -1,0 +1,20 @@
+{
+  "image": "ghcr.io/tara-zero/tokio-immediate-ci-base:main-2026-02-13",
+  "runArgs": ["--device", "/dev/fuse"],
+  "remoteEnv": {
+    "TERM": "${localEnv:TERM}",
+    "COLORTERM": "${localEnv:COLORTERM}",
+    "LS_COLORS": "${localEnv:LS_COLORS}",
+    "EDITOR": "${localEnv:EDITOR}",
+    "MERGE": "${localEnv:MERGE}",
+    "PAGER": "${localEnv:PAGER}",
+    "BAT_PAGER": "${localEnv:BAT_PAGER}",
+    "BAT_STYLE": "${localEnv:BAT_STYLE}",
+    "BAT_PAGING": "${localEnv:BAT_PAGING}",
+    "BUILDAH_LAYERS": "${localEnv:BUILDAH_LAYERS}",
+    "RUSTFLAGS": "${localEnv:RUSTFLAGS}",
+    "RUST_LOG": "${localEnv:RUST_LOG}",
+    "RUST_LIB_BACKTRACE": "${localEnv:RUST_LIB_BACKTRACE}",
+    "RUST_BACKTRACE": "${localEnv:RUST_BACKTRACE}"
+  }
+}

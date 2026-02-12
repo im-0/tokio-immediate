@@ -1,0 +1,28 @@
+[package]
+name = "tokio-immediate-egui"
+description = "Asynchronous glue for your egui application"
+
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[features]
+default = []
+
+## Enable `trigger` and wrappers for various `tokio::sync` primitives.
+sync = ["tokio-immediate/sync"]
+
+[dependencies.document-features]
+workspace = true
+features = [
+    "default",
+]
+
+[dependencies]
+egui = { workspace = true }
+tokio-immediate = { workspace = true }

@@ -1,0 +1,33 @@
+[package]
+name = "tokio-immediate"
+description = "Asynchronous glue for your immediate mode UI"
+
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+
+## Enable `trigger` and wrappers for various `tokio::sync` primitives.
+sync = ["tokio/sync"]
+
+[dependencies.document-features]
+workspace = true
+features = [
+    "default",
+]
+
+[dependencies.tokio]
+workspace = true
+features = [
+    "rt",
+]
