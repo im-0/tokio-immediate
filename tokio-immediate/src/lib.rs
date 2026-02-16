@@ -138,12 +138,21 @@ struct AsyncGlueWakerListInner {
 /// A lightweight, cloneable handle that can request a repaint of the
 /// [`AsyncGlueViewport`] it was created from.
 ///
-/// If the viewport has been dropped, [`wake_up()`](Self::wake_up)
+/// If the viewport has been dropped, [`AsyncGlueWakeUp::wake_up`]
 /// becomes a no-op and returns `false`.
 #[derive(Clone)]
 pub struct AsyncGlueWaker {
     wake_up_requested: Arc<AtomicBool>,
     wake_up: Weak<dyn Fn() + Send + Sync>,
+}
+
+/// Common interface for types that can request a viewport wake-up.
+pub trait AsyncGlueWakeUp {
+    /// Requests a wake-up.
+    ///
+    /// Returns `true` when the wake-up request was accepted, and `false`
+    /// when it could not be delivered.
+    fn wake_up(&self) -> bool;
 }
 
 /// Abstraction over how [`AsyncGlue`] accesses a Tokio runtime.
@@ -363,7 +372,7 @@ impl Drop for AsyncGlueViewport {
         let weak = Arc::downgrade(&wake_up);
         drop(wake_up);
         if weak.strong_count() == 0 {
-            // Make sure that some other thread/task will notice this on `AsyncGlueWaker::wake_up()`.
+            // Make sure that some other thread/task will notice this on `AsyncGlueWakeUp::wake_up()`.
             self.wake_up_requested.store(false, Ordering::Relaxed);
         }
     }
@@ -446,6 +455,20 @@ impl Default for AsyncGlueWakerList {
     }
 }
 
+impl AsyncGlueWakeUp for AsyncGlueWakerList {
+    /// Wakes up every registered waker.
+    ///
+    /// Returns `true` if all wakers were successfully woken (or the list is
+    /// empty). Returns `false` if any waker's viewport has been dropped.
+    fn wake_up(&self) -> bool {
+        self.inner()
+            .wakers
+            .iter()
+            .filter_map(|waker| waker.as_ref().map(AsyncGlueWakeUp::wake_up))
+            .all(|was_woken| was_woken)
+    }
+}
+
 impl AsyncGlueWakerList {
     /// Creates a new waker list pre-allocated for `capacity` wakers.
     #[must_use]
@@ -499,19 +522,6 @@ impl AsyncGlueWakerList {
         inner.free.push(idx);
     }
 
-    /// Wakes up every registered waker.
-    ///
-    /// Returns `true` if all wakers were successfully woken (or the list is
-    /// empty). Returns `false` if any waker's viewport has been dropped.
-    #[allow(clippy::must_use_candidate)]
-    pub fn wake_up(&self) -> bool {
-        self.inner()
-            .wakers
-            .iter()
-            .filter_map(|w| w.as_ref().map(AsyncGlueWaker::wake_up))
-            .all(|a| a)
-    }
-
     fn inner(&'_ self) -> RwLockReadGuard<'_, AsyncGlueWakerListInner> {
         self.inner
             .read()
@@ -525,14 +535,13 @@ impl AsyncGlueWakerList {
     }
 }
 
-impl AsyncGlueWaker {
+impl AsyncGlueWakeUp for AsyncGlueWaker {
     /// Requests a repaint of the associated viewport.
     ///
     /// Returns `true` if the wake-up callback was invoked (or a request was
     /// already pending). Returns `false` if the owning
     /// [`AsyncGlueViewport`] has been dropped.
-    #[allow(clippy::must_use_candidate)]
-    pub fn wake_up(&self) -> bool {
+    fn wake_up(&self) -> bool {
         if self
             .wake_up_requested
             .compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
@@ -549,7 +558,9 @@ impl AsyncGlueWaker {
             true
         }
     }
+}
 
+impl AsyncGlueWaker {
     /// Returns `true` if the owning [`AsyncGlueViewport`] is still alive.
     #[must_use]
     pub fn is_alive(&self) -> bool {

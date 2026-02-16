@@ -4,7 +4,7 @@ use ::std::ops::{Deref, DerefMut};
 
 use ::tokio::sync::watch;
 
-use crate::{AsyncGlueWaker, AsyncGlueWakerList};
+use crate::{AsyncGlueWakeUp, AsyncGlueWaker, AsyncGlueWakerList};
 
 /// Creates a new watch channel, returning a [`Sender`] and a [`Receiver`]
 /// that is already registered with the given [`AsyncGlueWaker`].
