@@ -64,12 +64,12 @@ clippy:
     for package in \
             "tokio-immediate" \
             "tokio-immediate-egui" \
-            "tokio-immediate-example-egui" \
-            "tokio-immediate-example-egui-minimal" \
             "tokio-immediate-tests"; do \
         cargo clippy --package "${package}" --all-targets --no-default-features -- --deny warnings; \
         cargo clippy --package "${package}" --all-targets --no-default-features --features "sync" -- --deny warnings; \
     done
+    cargo clippy --package "tokio-immediate-example-egui" --all-targets --all-features -- --deny warnings
+    cargo clippy --package "tokio-immediate-example-egui-minimal" --all-targets --all-features -- --deny warnings
 
 [doc("Run `cargo build`")]
 [group("Development")]
