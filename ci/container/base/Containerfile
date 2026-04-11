@@ -4,9 +4,14 @@ FROM quay.io/rockylinux/rockylinux:${rocky_version}
 
 # Must be in sync with `$SRC_ROOT/rust-toolchain.toml`.
 # Must be in sync with `$SRC_ROOT/.github/workflows/ci.yml`.
-ARG rust_toolchain_version="1.93.1"
+ARG rust_toolchain_version="1.95.0"
 ARG rust_toolchain_profile="default"
 ARG rust_toolchain_components="rust-analyzer,rust-src"
+ARG rust_toolchain_targets="wasm32-unknown-unknown"
+
+ARG trunk_version="0.21.14"
+ARG wasm_bindgen_version="0.2.117"
+ARG wasm_opt_version="version_129"
 
 COPY "zzzz-cd-workspaces.sh" "/etc/profile.d/zzzz-cd-workspaces.sh"
 COPY "zzzz-fancy-prompt.sh" "/etc/profile.d/zzzz-fancy-prompt.sh"
@@ -92,6 +97,10 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
         --no-update-default-toolchain \
         --no-modify-path
 ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup \
+        target add \
+        --toolchain "${rust_toolchain_version}" \
+        ${rust_toolchain_targets}
 
 RUN rustup completions "bash" >/etc/bash_completion.d/rustup
 RUN rustup completions "bash" "cargo" >/etc/bash_completion.d/cargo
@@ -117,6 +126,49 @@ RUN rustup \
         --component "${rust_toolchain_components}" \
         "nightly"
 
+# Install `trunk`.
+RUN cargo \
+        install \
+        --bins \
+        --locked \
+        "trunk@${trunk_version}"
+# Install `wasm-bindgen`.
+RUN cargo \
+        install \
+        --bins \
+        --locked \
+        "wasm-bindgen-cli@${wasm_bindgen_version}"
+# Build `wasm-opt`.
+RUN dnf \
+        install \
+        --assumeyes \
+        "cmake" \
+        "lld"
+RUN git \
+        clone \
+        --branch "${wasm_opt_version}" \
+        --depth 1 \
+        --recurse-submodules \
+        --shallow-submodules \
+        "https://github.com/WebAssembly/binaryen" \
+        "/tmp/binaryen"
+RUN mkdir "/tmp/binaryen/build"
+RUN cd "/tmp/binaryen/build" \
+        && cmake \
+            -D "CMAKE_C_COMPILER=clang" \
+            -D "CMAKE_CXX_COMPILER=clang++" \
+            -D "CMAKE_BUILD_TYPE=Release" \
+            -D "BUILD_STATIC_LIB=ON" \
+            ..
+RUN cd "/tmp/binaryen/build" \
+        && make "wasm-opt"
+RUN strip "/tmp/binaryen/build/bin/wasm-opt"
+
+ENV TRUNK_SKIP_VERSION_CHECK="true"
+ENV TRUNK_TOOLS_WASM_BINDGEN="${wasm_bindgen_version}"
+ENV TRUNK_TOOLS_WASM_OPT="${wasm_opt_version}"
+ENV TRUNK_SERVE_ADDRESS="0.0.0.0"
+
 # Install `sccache`.
 RUN dnf \
         install \
@@ -133,6 +185,13 @@ RUN dnf clean all
 RUN rm -rf "/root/.cargo/registry"
 RUN rm -rf "/root/.cache"
 RUN rm -f /var/log/dnf5.log*
+
+# Install `wasm-opt` into location expected by `trunk`.
+RUN mkdir --parents "/root/.cache/trunk/wasm-opt-${wasm_opt_version}/bin"
+RUN mv \
+        "/tmp/binaryen/build/bin/wasm-opt" \
+        "/root/.cache/trunk/wasm-opt-${wasm_opt_version}/bin/wasm-opt"
+RUN rm -rf "/tmp/binaryen"
 
 RUN mandb --create
 RUN updatedb
