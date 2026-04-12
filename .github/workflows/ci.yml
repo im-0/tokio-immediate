@@ -58,9 +58,15 @@ jobs:
                   # Must be in sync with `$SRC_ROOT/ci/container/base/Containerfile`.
                   toolchain: 1.95.0
                   components: clippy
+                  targets: wasm32-unknown-unknown
 
             - name: Install just
               uses: taiki-e/install-action@just
+
+            - name: Install trunk
+              uses: taiki-e/install-action@v2
+              with:
+                  tool: trunk
 
             - name: Run CI recipe
               run: just ${{ matrix.recipe }}
@@ -87,10 +93,16 @@ jobs:
                   # Must be in sync with `$SRC_ROOT/rust-toolchain.toml`.
                   # Must be in sync with `$SRC_ROOT/ci/container/base/Containerfile`.
                   toolchain: 1.95.0
-                  components: clippy,rust-analyzer,rust-src
+                  components: clippy
+                  targets: wasm32-unknown-unknown
 
             - name: Install just
               uses: taiki-e/install-action@just
+
+            - name: Install trunk
+              uses: taiki-e/install-action@v2
+              with:
+                  tool: trunk
 
             - name: Install LLVM/Clang
               uses: KyleMayes/install-llvm-action@v2

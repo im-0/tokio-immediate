@@ -5,7 +5,7 @@ exe_ext := if os() == "windows" { ".exe" } else { "" }
 
 # Use `mold` linker in devcontainer/CI.
 
-export RUSTFLAGS := if env("DEVCONTAINER_HAS_MOLD", "0") == "1" { env("RUSTFLAGS", "") + " -C linker=clang -C link-arg=-fuse-ld=mold" } else { env("RUSTFLAGS", "") }
+rustflags_mold := if env("DEVCONTAINER_HAS_MOLD", "0") == "1" { env("RUSTFLAGS", "") + " -C linker=clang -C link-arg=-fuse-ld=mold" } else { env("RUSTFLAGS", "") }
 
 # Configuration.
 
@@ -25,22 +25,28 @@ list:
 [doc("Run egui example")]
 [group("Examples")]
 run-egui:
-    cargo run --release --package "tokio-immediate-example-egui"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo run --release --package "tokio-immediate-example-egui"
 
 [doc("Run minimal egui example")]
 [group("Examples")]
 run-egui-minimal:
-    cargo run --release --package "tokio-immediate-example-egui-minimal"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo run --release --package "tokio-immediate-example-egui-minimal"
+
+[doc("Serve web egui example")]
+[group("Examples")]
+[working-directory: "example-egui-web"]
+serve-egui-web:
+    RUST_LOG="info" trunk serve --release
 
 [doc("Run minimal imgui example")]
 [group("Examples")]
 run-imgui-minimal:
-    cargo run --release --package "tokio-immediate-example-imgui-minimal"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo run --release --package "tokio-immediate-example-imgui-minimal"
 
 [doc("Run minimal ratatui example")]
 [group("Examples")]
 run-ratatui-minimal:
-    cargo run --release --package "tokio-immediate-example-ratatui-minimal"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo run --release --package "tokio-immediate-example-ratatui-minimal"
 
 [doc("Run `cargo clean`")]
 [group("Development")]
@@ -55,7 +61,21 @@ fmt:
 [doc("Run `cargo check`")]
 [group("Development")]
 check:
-    cargo check --workspace --all-targets --all-features
+    cargo check \
+        --package "tokio-immediate" \
+        --package "tokio-immediate-egui" \
+        --package "tokio-immediate-tests" \
+        --package "tokio-immediate-example-egui" \
+        --package "tokio-immediate-example-egui-minimal" \
+        --package "tokio-immediate-example-imgui-minimal" \
+        --package "tokio-immediate-example-ratatui-minimal" \
+        --all-targets \
+        --all-features
+    cargo check \
+        --package "tokio-immediate-example-egui-web" \
+        --target "wasm32-unknown-unknown" \
+        --all-targets \
+        --all-features
 
 [doc("Run `cargo docs-rs...`")]
 [group("Development")]
@@ -77,6 +97,7 @@ clippy:
     done
     cargo clippy --package "tokio-immediate-example-egui" --all-targets --all-features -- --deny warnings
     cargo clippy --package "tokio-immediate-example-egui-minimal" --all-targets --all-features -- --deny warnings
+    cargo clippy --package "tokio-immediate-example-egui-web" --target "wasm32-unknown-unknown" --all-targets --all-features -- --deny warnings
     cargo clippy --package "tokio-immediate-example-imgui-minimal" --all-targets --all-features -- --deny warnings
     cargo clippy --package "tokio-immediate-example-ratatui-minimal" --all-targets --all-features -- --deny warnings
 
@@ -84,15 +105,17 @@ clippy:
 [group("Development")]
 build:
     # Features does not play well with `--workspace` so we build each crate separately.
-    cargo build --package "tokio-immediate-example-egui" --bins
-    cargo build --package "tokio-immediate-example-egui-minimal" --bins
-    cargo build --package "tokio-immediate-example-imgui-minimal" --bins
-    cargo build --package "tokio-immediate-example-ratatui-minimal" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --package "tokio-immediate-example-egui" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --package "tokio-immediate-example-egui-minimal" --bins
+    cd "example-egui-web" && trunk build
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --package "tokio-immediate-example-imgui-minimal" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --package "tokio-immediate-example-ratatui-minimal" --bins
     @echo
     @echo "Examples (debug):"
     @ls -lh \
             target/debug/tokio-immediate-example-egui{{ exe_ext }} \
             target/debug/tokio-immediate-example-egui-minimal{{ exe_ext }} \
+            example-egui-web/dist/index.html \
             target/debug/tokio-immediate-example-imgui-minimal{{ exe_ext }} \
             target/debug/tokio-immediate-example-ratatui-minimal{{ exe_ext }}
 
@@ -100,23 +123,25 @@ build:
 [group("Development")]
 build-release:
     # Features does not play well with `--workspace` so we build each crate separately.
-    cargo build --release --package "tokio-immediate-example-egui" --bins
-    cargo build --release --package "tokio-immediate-example-egui-minimal" --bins
-    cargo build --release --package "tokio-immediate-example-imgui-minimal" --bins
-    cargo build --release --package "tokio-immediate-example-ratatui-minimal" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --release --package "tokio-immediate-example-egui" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --release --package "tokio-immediate-example-egui-minimal" --bins
+    cd "example-egui-web" && trunk build --release
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --release --package "tokio-immediate-example-imgui-minimal" --bins
+    RUSTFLAGS="{{ rustflags_mold }}" cargo build --release --package "tokio-immediate-example-ratatui-minimal" --bins
     @echo
     @echo "Examples (release):"
     @ls -lh \
             target/release/tokio-immediate-example-egui{{ exe_ext }} \
             target/release/tokio-immediate-example-egui-minimal{{ exe_ext }} \
+            example-egui-web/dist/index.html \
             target/release/tokio-immediate-example-imgui-minimal{{ exe_ext }} \
             target/release/tokio-immediate-example-ratatui-minimal{{ exe_ext }}
 
 [doc("Run `cargo test`")]
 [group("Development")]
 test *args:
-    cargo test --package "tokio-immediate-tests" --all-targets --no-default-features "${@}"
-    cargo test --package "tokio-immediate-tests" --all-targets --no-default-features --features "sync" "${@}"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo test --package "tokio-immediate-tests" --all-targets --no-default-features "${@}"
+    RUSTFLAGS="{{ rustflags_mold }}" cargo test --package "tokio-immediate-tests" --all-targets --no-default-features --features "sync" "${@}"
 
 [doc("Run `cargo fmt --check`")]
 [group("Continuous integration")]

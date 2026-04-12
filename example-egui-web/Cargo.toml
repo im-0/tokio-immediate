@@ -1,0 +1,77 @@
+[package]
+name = "tokio-immediate-example-egui-web"
+description = "egui + tokio-immediate usage example for web/Wasm"
+publish = false
+
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+# Dummy feature to make `rust-analyzer` happy.
+# See https://github.com/rust-lang/rust-analyzer/issues/18114
+sync = []
+
+[dependencies]
+console_error_panic_hook.workspace = true
+
+[dependencies.eframe]
+workspace = true
+features = [
+    "default_fonts",
+    "wgpu",
+]
+
+[dependencies.egui]
+workspace = true
+features = [
+    "default_fonts",
+]
+
+[dependencies.egui-wgpu]
+workspace = true
+features = [
+    "default",
+]
+
+[dependencies.tokio-immediate-egui]
+workspace = true
+features = [
+    "sync",
+]
+
+[dependencies.wasm-bindgen]
+workspace = true
+features = [
+    "std",
+]
+
+[dependencies.wasm-bindgen-futures]
+workspace = true
+features = [
+    "std",
+]
+
+[dependencies.web-sys]
+workspace = true
+features = [
+    "std",
+    "Window",
+    "Document",
+    "HtmlElement",
+    "Text",
+]
+
+[dependencies.wgpu]
+workspace = true
+features = [
+    "webgl",
+    "webgpu",
+    "std",
+    "web",
+]
